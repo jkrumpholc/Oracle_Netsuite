@@ -7,6 +7,7 @@ from nsi_secret_vault.models.secrets import (
 )
 from nsi_secret_vault.services.secret_store import SecretStore
 from nsi_secret_vault.services.ssh_generator import SSHGenerator
+from nsi_secret_vault.services.pass_generator import PassGenerator
 
 app = FastAPI()
 
@@ -21,6 +22,11 @@ def ssh_generator_dep(
     return SSHGenerator(secret_store)
 
 
+def pass_generator_dep(
+        secret_store: Annotated[SecretStore, Depends(secret_store_dep)]
+) -> PassGenerator:
+    return PassGenerator(secret_store)
+
 @app.get("/secret")
 async def get_secret(
         identifier: str,
@@ -34,10 +40,18 @@ async def get_secret(
 
 @app.post("/secret")
 async def create_secret(
-    secret: SecretGenerateRequest,
-    ssh_generator: Annotated[SSHGenerator, Depends(ssh_generator_dep)]
+        secret: SecretGenerateRequest,
+        ssh_generator: Annotated[SSHGenerator, Depends(ssh_generator_dep)],
+        pass_generator: Annotated[PassGenerator, Depends(pass_generator_dep)],
 ):
-    if await ssh_generator.generate_secret(secret):
+    match secret.secret_type:
+        case "SSH":
+            ret = await ssh_generator.generate_secret(secret)
+        case "PASS":
+            ret = await pass_generator.generate_secret(secret)
+        case _:
+            ret = False
+    if ret:
         return Response(status_code=status.HTTP_201_CREATED)
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
