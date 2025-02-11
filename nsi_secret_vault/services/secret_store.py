@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from nsi_secret_vault.models.secrets import SSHKey, PasswordKey
+from nsi_secret_vault.models.secrets import SSHKey, PasswordKey, GPGKey
 
 
 class SecretStore:
@@ -13,5 +13,5 @@ class SecretStore:
     def save(self, identifier: str, secret: Any):
         self.storage[identifier] = secret
 
-    def get(self, identifier: str) -> SSHKey | PasswordKey | None:
+    def get(self, identifier: str) -> SSHKey | PasswordKey | GPGKey | None:
         return self.storage.get(identifier)

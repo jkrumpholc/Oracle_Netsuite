@@ -16,6 +16,10 @@ class SecretSpec(BaseModel):
     length: int = None  # -l
     symbol_group: Literal['alpha', 'num', 'alpha-num', 'alpha-num-symbol'] = None  # -g
 
+    # GPG
+    gpg_key_type: Literal['rsa', 'dsa'] = None
+    gpg_key_length: Literal[1024, 2048] = None
+
 
 class SSHKey(BaseModel):
     key_type: Literal['dsa', 'ecdsa', 'ecdsa-sk', 'ed25519', 'ed25519-sk', 'rsa']
@@ -28,12 +32,18 @@ class PasswordKey(BaseModel):
     password_hash: bytes
 
 
+class GPGKey(BaseModel):
+    key_type: Literal['rsa', 'dsa']
+    description: Optional[str]  # -C
+    contents: bytes
+
+
 class SecretGenerateRequest(BaseModel):
     identifier: str
-    secret_type: Literal['SSH', 'PASS']
+    secret_type: Literal['SSH', 'PASS', 'GPG']
     spec: SecretSpec
 
 
 class SecretGetResponse(BaseModel):
     identifier: str
-    secret: SSHKey | PasswordKey
+    secret: SSHKey | PasswordKey | GPGKey
